@@ -1,8 +1,13 @@
 {
-  "name": "jsx",
+  "name": "@link-hooks/jsx",
   "version": "1.0.0",
-  "description": "",
-  "main": "./dist/jsx.js",
+  "description": "jsx transform object tree",
+  "author": "xiguan00yu",
+  "license": "MIT",
+  "repository": "xiguan00yu/jsx",
+  "main": "dist/jsx.js",
+  "unpkg": "dist/jsx.umd.js",
+  "module": "dist/jsx.js",
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c --watch"
@@ -10,8 +15,6 @@
   "keywords": [
     "jsx"
   ],
-  "author": "",
-  "license": "ISC",
   "devDependencies": {
     "rollup": "^2.52.1"
   }
