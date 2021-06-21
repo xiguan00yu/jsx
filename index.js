@@ -1,12 +1,37 @@
 function isFn(anyV) {
     return typeof anyV === 'function'
 }
+function isO(anyV) {
+    return typeof anyV === 'object'
+}
+function rc() {
+    return `${typeof performance !== 'undefined' ? performance.now() : Date.now()}`.slice(-5)
+}
+// anyObj => string
+function any2s(sf) {
+    if (!isFn(sf) && !isO(sf)) return `S${sf})`
+    let k = any2s.cs.get(sf),
+        k2 = k ?? (isFn(sf) ? `F${sf.name})` : `O${sf.__k ?? rc()})`)
+    if (k !== k2) {
+        any2s.cs.set(sf, k2)
+    }
+    return k2
+}
+// cache Key
+any2s.cs = new WeakMap()
+
+// pA:['a',fn,...] => ['string','string', ...]
+function sf2sA(pA = []) {
+    return pA.map(
+        p => any2s(p)
+    )
+}
 
 // pA:['a',fn,...] => {[string|fn.name]: xxx}
 function sf2M(pA = []) {
     return pA.reduce(
         (m, p) => {
-            m[isFn(p) ? p.name : p] = p
+            m[any2s(p)] = p
             return m
         },
         {}
@@ -14,13 +39,13 @@ function sf2M(pA = []) {
 }
 
 // s:['a=1','b=2'] => {a:1,b:2}
-function sA2pM(sA = []) {
+function sA2pM(sA = [], sM /** {sv:V} */) {
     return sA.reduce(
         (pM, s) => {
             if (s === E || !s.trim()) return pM
             let [k, v] = s.split(EFF)
             if (!v) throw Error(`${k}=empty?`)
-            pM[k.trim()] = v
+            pM[k.trim()] = gV(sM, v)
             return pM
         },
         {}
@@ -73,6 +98,10 @@ function fNeN(na = []) {
     return null
 }
 
+function gV(map, k) {
+    return map[k] ?? k
+}
+
 function cE(fxc) {
     let total = fxc.length
     if (total === 0)
@@ -91,8 +120,8 @@ const SLF = '/'
 const EF = '>'
 
 function jsx(sA, ...pA) {
+    const pMK = sf2sA(pA)
     const pM = sf2M(pA)
-    const pMK = Object.keys(pM)
     const fxc = insertLeftArr(sA, pMK).join('').trim()
     cE(fxc)
     let cI = 0,
@@ -110,7 +139,6 @@ function jsx(sA, ...pA) {
                 if (ucf !== false) {
                     // c ?
                     let ucn = fNeN(nsk)
-                    if (!ucn.c) ucn.c = []
                     // find last cItem.eIe, or startTag.sIe
                     let ct = sub(fxc, (ucn.c.length > 0 ? pick(ucn.c, ucn.c.length - 1).eIe : ucn.sIe) + 1, cI).trim()
                     if (ct.length) ucn.c.push(ct)
@@ -118,11 +146,35 @@ function jsx(sA, ...pA) {
                 }
                 pick(fxc, cI + 1) === SLF ? (efI = cI + 2) : (sfI = cI + 1)
                 break;
+            case SLF:
+                // find <t />
+                if (sfI !== -1 && pick(fxc, cI + 1) === EF) {
+                    let [t, ...tpA] = sub(fxc, sfI, cI).split(E),
+                        n = jsx.h({
+                            t: gV(pM, t), p: sA2pM(tpA, pM), c: [],
+                            sIs: sfI, sIe: cI - 1, eIs: cI, eIe: cI + 1
+                        })
+                    n._jsx = true
+                    if (nsk.length === 0) {
+                        nsk.push(n)
+                    } else {
+                        // insert parent node
+                        let fn = fNeN(nsk)
+                        if (!fn) throw Error('no parent node ?')
+                        fn.c.push(n)
+                        ucf = fn.t
+                    }
+                    sfI = -1
+                }
+                break;
             case EF:
                 // find < and >
                 if (sfI !== -1) {
                     let [t, ...tpA] = sub(fxc, sfI, cI).split(E),
-                        n = jsx.h({ t, p: sA2pM(tpA), sIs: sfI, sIe: cI, c: [] })
+                        n = jsx.h({
+                            t: gV(pM, t), p: sA2pM(tpA, pM), c: [],
+                            sIs: sfI, sIe: cI
+                        })
                     n._jsx = true
                     nsk.push(n)
                     ucf = t
@@ -130,7 +182,7 @@ function jsx(sA, ...pA) {
                 }
                 // find </ adn >
                 if (efI !== -1) {
-                    let t = sub(fxc, efI, cI)
+                    let st = sub(fxc, efI, cI), t = gV(pM, st)
                     let n = pop(nsk)
                     if (!n) throw Error(`not found ${t} start tag`)
                     if (n.t !== t) throw Error(`start tag no eq end tag => ${n.t} !== ${t}`)
@@ -139,15 +191,15 @@ function jsx(sA, ...pA) {
                     if (nsk.length === 0) {
                         nsk.push(n)
                     } else {
+                        // insert parent node
                         let fn = fNeN(nsk)
-                        if (!fn.c) fn.c = []
+                        if (!fn) throw Error('no parent node ?')
                         fn.c.push(n)
                         ucf = fn.t
                     }
                     efI = -1
                 }
                 break;
-
             default:
             // TODO
         }
