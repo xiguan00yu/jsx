@@ -9,7 +9,7 @@ function rc() {
 }
 // anyObj => string
 function any2s(sf) {
-    if (!isFn(sf) && !isO(sf)) return `S${sf})`
+    if (!isFn(sf) && !isO(sf)) return sf
     let k = any2s.cs.get(sf),
         k2 = k ?? (isFn(sf) ? `F${sf.name})` : `O${sf.__k ?? rc()})`)
     if (k !== k2) {
