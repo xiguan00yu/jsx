@@ -102,6 +102,10 @@ function gV(map, k) {
     return map[k] ?? k
 }
 
+function faR(cA = [], cI) {
+    return cA.push(...(Array.isArray(cI) ? cI : [cI])) && cA
+}
+
 function cE(fxc) {
     let total = fxc.length
     if (total === 0)
@@ -141,7 +145,7 @@ function jsx(sA, ...pA) {
                     let ucn = fNeN(nsk)
                     // find last cItem.eIe, or startTag.sIe
                     let ct = sub(fxc, (ucn.c.length > 0 ? pick(ucn.c, ucn.c.length - 1).eIe : ucn.sIe) + 1, cI).trim()
-                    if (ct.length) ucn.c.push(gV(pM, ct))
+                    if (ct.length) faR(ucn.c, gV(pM, ct))
                     ucf = false
                 }
                 pick(fxc, cI + 1) === SLF ? (efI = cI + 2) : (sfI = cI + 1)

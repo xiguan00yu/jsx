@@ -80,4 +80,20 @@ jsx`
 //   eIs: 69,
 //   eIe: 72
 // }
+const ar = ["Hello", "World"];
+jsx`
+    <div>
+        ${ar}
+    </div>
+`;
+// {
+//   t: 'div',
+//   p: {},
+//   c: [ 'Hello', 'World' ],
+//   sIs: 1,
+//   sIe: 4,
+//   _jsx: true,
+//   eIs: 36,
+//   eIe: 39
+// }
 ```
