@@ -1,4 +1,4 @@
-### DEMO
+# DEMO
 
 ```shell
 npm install @link-hooks/jsx
@@ -97,3 +97,17 @@ jsx`
 //   eIe: 39
 // }
 ```
+
+# Upgrade
+
+### V1: 使用 String 的概念，对于整个 Args 都字符串化，以便于算法指针移动
+
+> 优点：速度稍微快一些
+>
+> 缺点：需要对 Args 去字符串化处理存在 key 的处理
+
+### V2: 使用 Array String 概念，对于两个 Item 间隔插入 Arg，动态的计算指针移动
+
+> 优点：不用处理 Args 字符串化
+>
+> 缺点：速度可能会慢

@@ -1,91 +1,19 @@
 function isFn(anyV) {
     return typeof anyV === 'function'
 }
-function isO(anyV) {
-    return typeof anyV === 'object'
-}
-function rc() {
-    return `${typeof performance !== 'undefined' ? performance.now() : Date.now()}`.slice(-5)
-}
-// anyObj => string
-function any2s(sf) {
-    if (!isFn(sf) && !isO(sf)) return sf
-    let k = any2s.cs.get(sf),
-        k2 = k ?? (isFn(sf) ? `F${sf.name})` : `O${sf.__k ?? rc()})`)
-    if (k !== k2) {
-        any2s.cs.set(sf, k2)
-    }
-    return k2
-}
-// cache Key
-any2s.cs = new WeakMap()
 
-// pA:['a',fn,...] => ['string','string', ...]
-function sf2sA(pA = []) {
-    return pA.map(
-        p => any2s(p)
-    )
+function isSr(anyV) {
+    return typeof anyV === 'string'
 }
 
-// pA:['a',fn,...] => {[string|fn.name]: xxx}
-function sf2M(pA = []) {
-    return pA.reduce(
-        (m, p) => {
-            m[any2s(p)] = p
-            return m
-        },
-        {}
-    )
-}
+const RE = /^\s*$/
+const SE = ''
+const E = ' '
+const EFF = '='
+const SF = '<'
+const SLF = '/'
+const EF = '>'
 
-// s:['a=1','b=2'] => {a:1,b:2}
-function sA2pM(sA = [], sM /** {sv:V} */) {
-    return sA.reduce(
-        (pM, s) => {
-            if (s === E || !s.trim()) return pM
-            let [k, v] = s.split(EFF)
-            if (!v) throw Error(`${k}=empty?`)
-            pM[k.trim()] = gV(sM, v)
-            return pM
-        },
-        {}
-    )
-}
-
-// la:[a,b,c] ra:[e,d] => [a,e,b,d,c]
-function insertLeftArr(la = [], ra = []) {
-    let lL = la.length,
-        rL = ra.length,
-        lI = 0,
-        rI = 0,
-        sum = []
-    while (lI < lL || rI < rL) {
-        if (lI < lL) {
-            sum.push(
-                la[lI++]
-            )
-        }
-        if (rI < rL) {
-            sum.push(
-                ra[rI++]
-            )
-        }
-    }
-    return sum
-}
-
-function pick(na = [], i = 0) {
-    return na[i]
-}
-
-function sub(s = '', sI, eI) {
-    return s.substring(sI, eI)
-}
-
-function pop(na = []) {
-    return na.pop()
-}
-// find last no end node
 function fNeN(na = []) {
     let total = na.length, cI = total - 1
     while (cI >= 0) {
@@ -98,64 +26,157 @@ function fNeN(na = []) {
     return null
 }
 
-function gV(map, k) {
-    return map[k] ?? k
-}
-
 function faR(cA = [], cI) {
     return cA.push(...(Array.isArray(cI) ? cI : [cI])) && cA
 }
+function jsx(sA = [], ...pA) {
 
-function cE(fxc) {
-    let total = fxc.length
-    if (total === 0)
-        throw console.warn('empty?')
-    if (pick(fxc) !== SF)
-        throw Error('start error format')
-    if (pick(fxc, total - 1) !== EF)
-        throw Error('end error format')
-    return null
-}
+    // sA = sA.map(s => s.trim())
 
-const E = ' '
-const EFF = '='
-const SF = '<'
-const SLF = '/'
-const EF = '>'
-
-function jsx(sA, ...pA) {
-    const pMK = sf2sA(pA)
-    const pM = sf2M(pA)
-    const fxc = insertLeftArr(sA, pMK).join('').trim()
-    cE(fxc)
     let cI = 0,
-        cTL = fxc.length,
+        cTA = [],
+        cTL = 0,
         cIo = '',
         sfI = -1,
         efI = -1,
         ucf = false,
         nsk = []
+
+    for (const s of sA) {
+        cTL += s.length + 1
+        cTA.push(cTL)
+    }
+
+    const pick = (i) => {
+        let si = cTA.findIndex(cl => cl > i),
+            csi = i - (cTA[si - 1] ?? 0)
+        return sA[si][csi] ?? (() => pA[si])
+    }
+
+    const sub = (s, e) => {
+
+        if (s > e) return ''
+
+        let total = cTA.length,
+            si = -1,
+            ei = -1
+
+        for (let i = 0; i < total; i++) {
+            si === -1 && s < cTA[i] && (si = i)
+            ei === -1 && e < cTA[i] && (ei = i)
+        }
+
+        let csi = s - (cTA[si - 1] ?? 0),
+            cei = e - (cTA[ei - 1] ?? 0),
+            lIsp = sA[ei][cei] === undefined,
+            lcei = lIsp ? cei - 1 : cei,
+            lcep = lIsp ? pA[ei] : '',
+            ra = [], fra = [], isa = false
+
+        if (si !== ei) {
+            ra.push(sA[si].substring(csi), pA[si])
+
+            for (si += 1; si < ei; si++) {
+                ra.push(sA[si], pA[si])
+            }
+
+            ra.push(sA[ei].substring(0, lcei), lcep)
+        } else {
+            // si === ei
+            ra.push(sA[si].substring(csi, lcei), lcep)
+        }
+
+        for (const r of ra) {
+            if (!isa && Array.isArray(r)) {
+                isa = true
+                fra.push(...r)
+                continue
+            }
+            if (!isSr(r)) {
+                fra.push(r)
+                continue
+            }
+            if (r && !r.match(RE)) {
+                fra.push(r)
+                continue
+            }
+        }
+
+        return isa ? fra :
+            fra.length === 1 ? fra[0] :
+                fra.join(SE)
+    }
+
+    const subTps = (s, e) => {
+        let t, p = {}, nsa = [], pI = null, lm = false
+
+        const g = () => {
+            let nl = nsa.length
+            if (nl === 0) return
+            if (nl === 1 && isFn(nsa[0])) {
+                return nsa[0]()
+            }
+            return nsa.join(SE)
+        }
+
+        loop:
+        while (s < e) {
+            pI = pick(s++)
+            if (pI === E) {
+                if (!t) {
+                    t = g()
+                    nsa = []
+                    continue loop
+                }
+                if (lm !== false) {
+                    p[lm] = g()
+                    lm = false
+                    nsa = []
+                }
+                continue loop
+            }
+            if (pI === EFF) {
+                lm = g()
+                p[lm] = null
+                nsa = []
+                continue loop
+            }
+            nsa.push(pI)
+        }
+
+        if (nsa.length > 0) {
+            let l = g()
+            if (!t) t = l
+            if (lm !== false) p[lm] = l
+        }
+
+        return { t, p }
+    }
+
     while (cI < cTL) {
-        cIo = pick(fxc, cI)
+        cIo = pick(cI)
         switch (cIo) {
             case SF:
                 // find < or </
                 if (ucf !== false) {
                     // c ?
-                    let ucn = fNeN(nsk)
-                    // find last cItem.eIe, or startTag.sIe
-                    let ct = sub(fxc, (ucn.c.length > 0 ? pick(ucn.c, ucn.c.length - 1).eIe : ucn.sIe) + 1, cI).trim()
-                    if (ct.length) faR(ucn.c, gV(pM, ct))
+                    let ucn = fNeN(nsk),
+                        // find last cItem.eIe, or startTag.sIe
+                        ct = sub((ucn.c.length > 0 ? ucn.c[ucn.c.length - 1].eIe : ucn.sIe) + 1, cI)
+
+                    ct = isSr(ct) ? ct.trim() : ct
+
+                    if (ct) faR(ucn.c, ct)
                     ucf = false
                 }
-                pick(fxc, cI + 1) === SLF ? (efI = cI + 2) : (sfI = cI + 1)
+                pick(cI + 1) === SLF ? (efI = cI + 2) : (sfI = cI + 1)
                 break;
             case SLF:
                 // find <t />
-                if (sfI !== -1 && pick(fxc, cI + 1) === EF) {
-                    let [t, ...tpA] = sub(fxc, sfI, cI).split(E),
+                if (sfI !== -1 && pick(cI + 1) === EF) {
+                    let { t, p } = subTps(sfI, cI),
                         n = jsx.h({
-                            t: gV(pM, t), p: sA2pM(tpA, pM), c: [],
+                            t, p, c: [],
                             sIs: sfI, sIe: cI - 1, eIs: cI, eIe: cI + 1
                         })
                     n._jsx = true
@@ -174,9 +195,9 @@ function jsx(sA, ...pA) {
             case EF:
                 // find < and >
                 if (sfI !== -1) {
-                    let [t, ...tpA] = sub(fxc, sfI, cI).split(E),
+                    let { t, p } = subTps(sfI, cI),
                         n = jsx.h({
-                            t: gV(pM, t), p: sA2pM(tpA, pM), c: [],
+                            t, p, c: [],
                             sIs: sfI, sIe: cI
                         })
                     n._jsx = true
@@ -186,8 +207,8 @@ function jsx(sA, ...pA) {
                 }
                 // find </ adn >
                 if (efI !== -1) {
-                    let st = sub(fxc, efI, cI), t = gV(pM, st)
-                    let n = pop(nsk)
+                    let { t } = subTps(efI, cI),
+                        n = nsk.pop()
                     if (!n) throw Error(`not found ${t} start tag`)
                     if (n.t !== t) throw Error(`start tag no eq end tag => ${n.t} !== ${t}`)
                     n.eIs = efI
@@ -205,11 +226,10 @@ function jsx(sA, ...pA) {
                 }
                 break;
             default:
-            // TODO
         }
         cI++
     }
-    return pick(nsk, 0)
+    return nsk[0]
 }
 
 jsx.h = (o = { t: 'div', c: [], p: [] }) => o
